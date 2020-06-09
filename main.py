@@ -3,15 +3,10 @@ import 解压
 import os
 import getopt
 import sys
-import virustotal
+import VT扫描
 
-def scanfiles(dirPath):
-    filesAndDirectoyrs = 文件操作.traversalDirectory(dirPath)
-    filesPath = filesAndDirectoyrs["fileLsit"]
-    testagain = virustotal.scanfiles(filesPath)
-    if len(testagain) != 0:
-        for filePath in testagain:
-            print(filePath, "请稍后重新查询")
+
+
 
 
 if __name__ == '__main__':
@@ -27,10 +22,10 @@ if __name__ == '__main__':
     scan_bool = False
     for opt_name, opt_value in opts:
         if opt_name == "-z":
-            zipPath = opt_value
             print(zipPath)
         if opt_name == "-u":
             unzipPath = opt_value
+            zipPath = opt_value
             print(unzipPath)
         if opt_name == "-p":
             passwordStr = opt_value
@@ -44,7 +39,7 @@ if __name__ == '__main__':
         if os.path.isdir(zipPath):
             解压.unDirectory(zipPath, unzipPath)
         if scan_bool:
-            scanfiles(unzipPath)
+            VT扫描.scanFiles_dir(unzipPath)
     if scan != "":
         if os.path.isdir(scan):
-            scanfiles(scan)
+            VT扫描.scanFiles_dir(scan)
