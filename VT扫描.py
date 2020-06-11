@@ -42,7 +42,7 @@ def scanFile(filePath):
         if resp["json_resp"]["response_code"] == 0:
             print("上传失败")
             return None
-    if resp["json_resp"]["positives"] is not None:
+    if "positives" in resp["json_resp"]:
         print(filePath, resp["json_resp"]["positives"])
     return resp
 
@@ -93,11 +93,11 @@ def scanResultRecording(scanResult, dirPath):
     scanFile_many = []
     scanFile_less = []
     scanFile_ManualConfirmation = []
-    for key, value in scanResult:
-        if value["json_resp"]["positives"] is not None:
+    for key, value in scanResult.items():
+        if "positives" in value["json_resp"]:
             # 将写入文件的扫描的文件路径转成相对路径 方便观看
             filesPath_result = os.path.relpath(key, dirPath)
-            scanFileResultStatistical_Str = filesPath_result + "\t\t" + "引擎报毒数：" + value["json_resp"]["positives"]
+            scanFileResultStatistical_Str = filesPath_result + "\t\t" + "引擎报毒数：" + str(value["json_resp"]["positives"])
             scanFileResultStatisticalList.append(scanFileResultStatistical_Str)
             if value["json_resp"]["positives"] >= 20:
                 scanFile_many.append(scanFileResultStatistical_Str)
@@ -112,7 +112,7 @@ def scanResultRecording(scanResult, dirPath):
     文件操作.writeData(scanFileResultStatistical, scanFileResultStatisticalList)
     文件操作.writeData(scanFile_many_Path, scanFile_many)
     文件操作.writeData(scanFile_less_Path, scanFile_less)
-    文件操作.writeData(scanFile_ManualConfirmation, scanFile_ManualConfirmation_Path)
+    文件操作.writeData(scanFile_ManualConfirmation_Path, scanFile_ManualConfirmation)
 
     pass
 
