@@ -167,10 +167,15 @@ def getDirPath(filePath):
 
 
 # 将数据写入文件
-def writeData(filePath, data):
+def writeData(filePath, data, wordWrap=True):
     f = open(filePath, "w")
     if type(data) is list:
-        f.writelines(data)
+        if wordWrap:
+            for linData in data:
+                f.write(linData)
+                f.write("\n")
+        else:
+            f.writelines(data)
     elif type(data) is dict:
         json.dump(data, f)
     else:
