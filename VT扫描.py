@@ -67,7 +67,7 @@ def scanFilePaths(filePaths):
     return scanFile_result
 
 
-def scanFiles_dir(dirPath):
+def scanFiles_dir(dirPath, scanInfo=False):
     filesAndDirectorys = 文件操作.traversalDirectory(dirPath)
     filesPath = filesAndDirectorys["fileList"]
     scanFile_result = scanFilePaths(filesPath)
@@ -77,11 +77,14 @@ def scanFiles_dir(dirPath):
     # 将查询的返回结果写入文件
     if len(scanFile_result["result"]) != 0:
         result = scanFile_result["result"]
-        scanResultRecording(result, dirPath)
+        if scanInfo:
+            scanResultRecording(result, dirPath, True)
+        else:
+            scanResultRecording(result, dirPath)
 
 
 # 记录查询后的结果
-def scanResultRecording(scanResult, dirPath):
+def scanResultRecording(scanResult, dirPath, scanInfo=False):
     scanFileResultPath = os.path.join(dirPath, "扫描结果")
     文件操作.checkDir(scanFileResultPath, True)
     # 记录简单统计
@@ -108,7 +111,20 @@ def scanResultRecording(scanResult, dirPath):
                 else:
                     # 报毒少，高可信引擎未报毒，需要手动确认
                     scanFile_ManualConfirmation.append(scanFileResultStatistical_Str)
-                pass
+            if scanInfo:
+                # 拼接单个文件查询结果文件的路径
+                scanFile_info_path = os.path.join(scanFileResultPath, filesPath_result)
+                scanFile_info_path = scanFile_info_path+".txt"
+                # 遍历单个文件查询结果记录其中报毒的引擎
+                scanFile_info = []
+                for scan_engine, scan_engine_info in value["json_resp"]["scans"].items():
+                    if scan_engine_info["detected"]:
+                        # 记录下报毒的引擎和报毒名
+                        scanFile_info_str = "报毒引擎：" + scan_engine.ljust(30) + "病毒名：" + scan_engine_info["result"]
+                        scanFile_info.append(scanFile_info_str)
+                # 创建目录结构
+                文件操作.checkDir(os.path.dirname(scanFile_info_path), True)
+                文件操作.writeData(scanFile_info_path, scanFile_info)
     文件操作.writeData(scanFileResultStatistical, scanFileResultStatisticalList)
     文件操作.writeData(scanFile_many_Path, scanFile_many)
     文件操作.writeData(scanFile_less_Path, scanFile_less)
