@@ -2,6 +2,8 @@ import os
 import zipfile
 import rarfile
 import 文件操作
+import shutil
+import pathlib
 
 
 # 根据不同的类型进行解压
@@ -45,14 +47,38 @@ def unZip(filePath, unFilePath, filePassword=None):
         print(文件操作.getFileName(filePath), "不是ZIP文件")
         return False
     zipFileObj = zipfile.ZipFile(filePath)
-    # if  __isEncrypteZip(filePath) and filePassword != None:
     zipFileObj.setpassword(filePassword)
-    # elif __isEncrypteZip(filePath) and filePassword == None:
-    # print(filePath, "需要密码")
-    # zipFileObj.close()
-    # return False
+    # 将文件路径和解压路径初始化为Path对象
+    unPathObj = pathlib.Path(unFilePath)
+    pathObj = pathlib.Path(filePath)
+    # 如果解压路径不存在则创建
+    if not unPathObj.exists():
+        unPathObj.mkdir()
     try:
-        zipFileObj.extractall(unFilePath)
+        # 拼接存放解压文件的文件夹路径
+        unPathObj = unPathObj/pathObj.stem
+        # 如果这个文件夹不存在则创建
+        if not unPathObj.exists():
+            unPathObj.mkdir()
+        # 遍历压缩包内部对象
+        for fName in zipFileObj.namelist():
+            # 转变压缩包内文件/文件夹编码
+            correct_fn = fName.encode('cp437').decode('gbk')
+            # 将当前遍历路径转成路径对象
+            correct_fnObj = unPathObj/correct_fn
+            # 如果当前遍历的路径为文件夹
+            if str(correct_fn).endswith("/"):
+                # 文件夹不存在则创建
+                if not correct_fnObj.exists():
+                    correct_fnObj.mkdir()
+                # 否则跳过
+                else:
+                    continue
+            else:
+                # 如果当前遍历路径为文件，则复制
+                with correct_fnObj.open("wb") as defile:
+                    with zipFileObj.open(fName, "r") as srcfile:
+                        shutil.copyfileobj(srcfile, defile)
         return True
     except zipfile.BadZipFile as e:
         print(文件操作.getFileName(filePath), "解压失败")
@@ -111,19 +137,8 @@ def unDirectory(zipPath, uZipPath, password="infected"):
             switch_Unzip(fileType, filePath, uZipFilePath, password)
         if not 文件操作.checkDir(uZipFilePath):
             print(文件操作.getFileName(filePath), "解压失败")
-        # if 文件操作.checkDir(uZipFilePath):
-        # fileOrDirectoyr_ = 文件操作.traversalDirectory(uZipFilePath)
-        # 如果压缩包内为单个文件夹，则将文件夹向上提一层
-        # if fileOrDirectoyr_["dirLsit"] and not fileOrDirectoyr_["fileLsit"] and len(fileOrDirectoyr_["dirLsit"]) == 1:
-        #     filePath_1_1 = os.path.dirname(os.path.dirname(fileOrDirectoyr_["dirLsit"][0]))
-        #     filePath_1 = os.path.dirname(fileOrDirectoyr_["dirLsit"][0])
-        #     fileName = os.path.basename(fileOrDirectoyr_["dirLsit"][0])
-        #     os.rename(filePath_1, filePath_1+"_1")
-        #     shutil.move(os.path.join(filePath_1+"_1", fileName), filePath_1_1)
-        #     shutil.rmtree(filePath_1+"_1")
 
 
 if __name__ == '__main__':
-    cmd = "7z x D:\\项目\\测黑脚本\\4-8\\4.7z -pinfected -y  -oD:\\项目\\测黑脚本\\4-8解压\\4.7z"
-    os.system(cmd)
+    unZip("C:\\Users\\Sy\\Desktop\\字符串处理工具.zip", "C:\\Users\\Sy\\Desktop\\1")
     print("解压完成")
