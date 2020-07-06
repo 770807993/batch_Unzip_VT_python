@@ -88,21 +88,6 @@ def unZip(filePath, unFilePath, filePassword=None):
     return False
 
 
-# 判断文件是否加密
-def __isEncrypteZip(filePath):
-    try:
-        f = open(filePath, "rb")
-        top8hex = f.read(8)
-        if top8hex[6:] == '\t\x00':
-            return True
-        return False
-    except IOError as e:
-        print(filePath, "判断是否加密时打开文件出错")
-    finally:
-        f.close()
-    return False
-
-
 # 解压7Z
 def un7z(filePath, unFilePath, filePassword=None):
     unState = False
