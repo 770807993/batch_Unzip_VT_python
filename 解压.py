@@ -2,7 +2,6 @@ import os
 import zipfile
 import rarfile
 import 文件操作
-import shutil
 
 
 # 根据不同的类型进行解压
