@@ -24,9 +24,9 @@ def unRar(filePath, unFilePath, filePassword=None):
         return False
     rarfile.UNRAR_TOOL = 'C:\\Program Files\\WinRAR\\UnRAR.exe'
     rarFileObj = rarfile.RarFile(filePath)
-    if rarFileObj.needs_password() and filePassword != None:
+    if rarFileObj.needs_password() and filePassword is not None:
         rarFileObj.setpassword(filePassword)
-    elif rarFileObj.needs_password() and filePassword == None:
+    elif rarFileObj.needs_password() and filePassword is None:
         print(filePath, "需要密码")
         rarFileObj.close()
         return False

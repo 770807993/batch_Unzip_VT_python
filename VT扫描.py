@@ -100,7 +100,7 @@ def scanResultRecording(scanResult, dirPath, scanInfo=False):
         if "positives" in value["json_resp"]:
             # 将写入文件的扫描的文件路径转成相对路径 方便观看
             filesPath_result = os.path.relpath(key, dirPath)
-            scanFileResultStatistical_Str = filesPath_result + "\t\t" + "引擎报毒数：" + str(value["json_resp"]["positives"])
+            scanFileResultStatistical_Str = filesPath_result.ljust(30) + "引擎报毒数：" + str(value["json_resp"]["positives"])
             scanFileResultStatisticalList.append(scanFileResultStatistical_Str)
             if value["json_resp"]["positives"] >= 20:
                 scanFile_many.append(scanFileResultStatistical_Str)
