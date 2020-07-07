@@ -1,5 +1,8 @@
 import os
 import json
+import pathlib
+import shutil
+import hashlib
 
 
 # 获取文件夹路径下的所有文件和文件夹路径并打印
@@ -32,18 +35,18 @@ def traversalDirectory(directoryPath, print_Str=False):
 
 
 # 获取文件夹路径下的所有文件夹路径并打印
-def traversalDirectory_file(directoyrPath, print_Str=False):
+def traversalDirectory_file(directoryPath, print_Str=False):
     # 获取文件夹路径
-    directoyrPath_ = directoyrPath
-    if os.path.isfile(directoyrPath):
-        directoyrPath_ = os.path.dirname(directoyrPath)
+    directoryPath_ = directoryPath
+    if os.path.isfile(directoryPath):
+        directoryPath_ = os.path.dirname(directoryPath)
     # 获取当前文件夹下的所有文件和目录
-    fileAndDirectoyrList = os.listdir(directoyrPath_)
+    fileAndDirectoryList = os.listdir(directoryPath_)
     # 将当前文件夹下的文件路径加入到文件路径列表
     fileList = []
-    for fileOrDirectoyr in fileAndDirectoyrList:
-        if os.path.isfile(os.path.join(directoyrPath_, fileOrDirectoyr)):
-            fileList.append(os.path.join(directoyrPath_, fileOrDirectoyr))
+    for fileOrDirectory in fileAndDirectoryList:
+        if os.path.isfile(os.path.join(directoryPath_, fileOrDirectory)):
+            fileList.append(os.path.join(directoryPath_, fileOrDirectory))
     if print_Str:
         for filePath in fileList:
             print("文件：", filePath)
@@ -51,14 +54,14 @@ def traversalDirectory_file(directoyrPath, print_Str=False):
 
 
 # 获取文件夹路径下的所有文件夹路径
-def traversalDirectory_dir(directoyrPath, print_Str=False):
+def traversalDirectory_dir(directoryPath, print_Str=False):
     # 获取当前文件夹下的所有文件和目录
-    fileAndDirectoyrList, directoyrPath_ = getFiles(directoyrPath, True)
+    fileAndDirectoryList, directoryPath_ = getFiles(directoryPath, True)
     # 将当前文件夹下的文件夹路径加入到文件夹路径列表
     dirList = []
-    for fileOrDirectoyr in fileAndDirectoyrList:
-        if not os.path.isfile(os.path.join(directoyrPath_, fileOrDirectoyr)):
-            dirList.append(os.path.join(directoyrPath_, fileOrDirectoyr))
+    for fileOrDirectory in fileAndDirectoryList:
+        if not os.path.isfile(os.path.join(directoryPath_, fileOrDirectory)):
+            dirList.append(os.path.join(directoryPath_, fileOrDirectory))
     if print_Str:
         for dirPath in dirList:
             print("文件夹：", dirPath)
@@ -66,28 +69,28 @@ def traversalDirectory_dir(directoyrPath, print_Str=False):
 
 
 # 获取文件夹路径下的所有文件的类型（后缀名）
-def traversalDirectory_fileType(directoyrPath, print_Str=False):
-    fileList = traversalDirectory_file(directoyrPath)
-    fileTypeLsit = {}
+def traversalDirectory_fileType(directoryPath, print_Str=False):
+    fileList = traversalDirectory_file(directoryPath)
+    fileTypeList = {}
     for file in fileList:
-        fileTypeLsit[getFileName(file)] = getFileType(file)
+        fileTypeList[getFileName(file)] = getFileType(file)
     if print_Str:
-        for key, value in fileTypeLsit.items():
+        for key, value in fileTypeList.items():
             print("文件名：" + key, "类型：" + value)
-    return fileTypeLsit
+    return fileTypeList
 
 
 # 获取路径下的所有文件和文件夹
-def getFiles(directoyrPath, returenPath=False):
+def getFiles(directoryPath, returnPath=False):
     # 获取当前文件夹路径
-    directoyrPath_ = directoyrPath
-    if os.path.isfile(directoyrPath):
-        directoyrPath_ = os.path.dirname(directoyrPath)
+    directoryPath_ = directoryPath
+    if os.path.isfile(directoryPath):
+        directoryPath_ = os.path.dirname(directoryPath)
     # 获取当前文件夹下的所有文件和目录
-    if not returenPath:
-        return os.listdir(directoyrPath_)
+    if not returnPath:
+        return os.listdir(directoryPath_)
     else:
-        return os.listdir(directoyrPath_), directoyrPath_
+        return os.listdir(directoryPath_), directoryPath_
 
 
 # 获取文件类型
@@ -183,14 +186,100 @@ def writeData(filePath, data, wordWrap=True):
     f.close()
 
 
+# 计算文件MD5
+def getFileMD5(filePath):
+    file_hash = None
+    if os.path.isfile(filePath):
+        f = open(filePath, "rb")
+        f_buffer = f.read()
+        f.close()
+        file_hash = hashlib.md5(f_buffer).hexdigest()
+    return file_hash
+
+
+# 对文件夹层级结构精简
+def directoryLevel_streamlining(path, pathLevel=0, printLog=False):
+    p = pathlib.Path(path)
+    if printLog:
+        print("当前为第%d层" % pathLevel)
+    pathList = []
+    for pathObj in p.iterdir():
+        if printLog:
+            print(pathObj)
+        pathList.append(pathObj)
+    if len(pathList) == 1:
+        if pathList[0].is_dir():
+            directoryLevel_streamlining(p/pathList[0], pathLevel+1, printLog)
+        else:
+            pSrc = p
+            pDit = p
+            pRemove = None
+            remove_bool = True
+            # 根据层级获取根目录路径
+            while pathLevel:
+                pDit = pDit.parent
+                pathLevel = pathLevel - 1
+                if pathLevel == 1:
+                    pRemove = pDit
+            # 循环遍历移动文件
+            continue_bool = False
+            for src_file in pSrc.iterdir():
+                # 如果需要移动的文件与根目录路径下文件的文件名有重复，则重命名需要移动的文件
+                for dit_file in pDit.iterdir():
+                    if src_file.name == dit_file.name:
+                        src_file_name = src_file.stem + "~" + src_file.suffix
+                        try:
+                            # 给文件改名，更新src_file对象的路径
+                            src_file = src_file.rename(src_file.parent/src_file_name)
+
+                        except FileExistsError as e:
+                            print(e)
+                            remove_bool = False
+                            continue_bool = True
+                            break
+                if continue_bool:
+                    continue_bool = False
+                    continue
+                shutil.move(str(src_file), str(pDit))
+            # 如果移动文件时不出错，则删除无用目录
+            if remove_bool:
+                shutil.rmtree(str(pRemove))
+    else:
+        if pathLevel != 0:
+            pSrc = p
+            pDit = p
+            pRemove = None
+            remove_bool = True
+            # 根据层级获取根目录路径
+            while pathLevel:
+                pDit = pDit.parent
+                pathLevel = pathLevel - 1
+                if pathLevel == 1:
+                    pRemove = pDit
+            # 循环遍历移动文件
+            continue_bool = False
+            for src_file in pSrc.iterdir():
+                # 如果需要移动的文件与根目录路径下文件的文件名有重复，则重命名需要移动的文件
+                for dit_file in pDit.iterdir():
+                    if src_file.name == dit_file.name:
+                        src_file_name = src_file.stem + "~" + src_file.suffix
+                        try:
+                            # 给文件改名，更新src_file对象的路径
+                            src_file = src_file.rename(src_file.parent/src_file_name)
+                        except FileExistsError as e:
+                            print(e)
+                            remove_bool = False
+                            continue_bool = True
+                            break
+                if continue_bool:
+                    continue_bool = False
+                    continue
+                shutil.move(str(src_file), str(pDit))
+            # 如果移动文件时不出错，则删除无用目录
+            if remove_bool:
+                shutil.rmtree(str(pRemove))
+
+
 # 测试
 if __name__ == '__main__':
-    # print("文件和文件夹：")
-    # traversalDirectory(".\path\Android.Adware.Dowgin.a.txt")
-    # print("文件夹：")
-    # traversalDirectory_file(".\path", True)
-    # print("文件：")
-    # traversalDirectory_file(".\path\Android.Adware.Dowgin.a.txt")
-    # print("文件类型：")
-    # traversalDirectory_fileType(".\path\Android.Adware.Dowgin.a.txt")
-    print(getFileName("D:\\项目\\测黑脚本\\4-8\\#Smoke #Ursnif (2020-03-19).rar", False))
+    directoryLevel_streamlining("C:\\Users\\Sy\\Desktop\\新建文件夹", 0, True)

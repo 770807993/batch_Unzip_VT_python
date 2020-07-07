@@ -1,5 +1,4 @@
 from virustotal_python import Virustotal
-import hashlib
 import os.path
 import time
 import 文件操作
@@ -10,13 +9,7 @@ vtotal = Virustotal("5af41c462b8cb6b9b02f1641ab3ebbbe6bc289b723de142c9765beb691f
 
 # 上传文件,参数为文件路径，返回值为查询结果
 def scanFile(filePath):
-    file_hash = None
-    if os.path.isfile(filePath):
-        f = open(filePath, "rb")
-        f_buffer = f.read()
-        f.close()
-        file_hash = hashlib.md5(f_buffer).hexdigest()
-    file_hash_list = [file_hash]
+    file_hash_list = [文件操作.getFileMD5(filePath)]
     try:
         resp = vtotal.file_report(file_hash_list)
     except Exception as e:
@@ -68,8 +61,8 @@ def scanFilePaths(filePaths):
 
 
 def scanFiles_dir(dirPath, scanInfo=False):
-    filesAndDirectorys = 文件操作.traversalDirectory(dirPath)
-    filesPath = filesAndDirectorys["fileList"]
+    filesAndDirectory = 文件操作.traversalDirectory(dirPath)
+    filesPath = filesAndDirectory["fileList"]
     scanFile_result = scanFilePaths(filesPath)
     if len(scanFile_result["testAgain"]) != 0:
         for filePath in scanFile_result["testAgain"]:
@@ -100,7 +93,7 @@ def scanResultRecording(scanResult, dirPath, scanInfo=False):
         if "positives" in value["json_resp"]:
             # 将写入文件的扫描的文件路径转成相对路径 方便观看
             filesPath_result = os.path.relpath(key, dirPath)
-            scanFileResultStatistical_Str = filesPath_result.ljust(30) + "引擎报毒数：" + str(value["json_resp"]["positives"])
+            scanFileResultStatistical_Str = filesPath_result.ljust(60) + "引擎报毒数：" + str(value["json_resp"]["positives"])
             scanFileResultStatisticalList.append(scanFileResultStatistical_Str)
             if value["json_resp"]["positives"] >= 20:
                 scanFile_many.append(scanFileResultStatistical_Str)
