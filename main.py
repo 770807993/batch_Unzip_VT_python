@@ -20,10 +20,10 @@ if __name__ == '__main__':
     scan_info = False
     for opt_name, opt_value in opts:
         if opt_name == "-z":
+            zipPath = opt_value
             print(zipPath)
         if opt_name == "-u":
             unzipPath = opt_value
-            zipPath = opt_value
             print(unzipPath)
         if opt_name == "-p":
             passwordStr = opt_value
@@ -37,6 +37,8 @@ if __name__ == '__main__':
             scan_info = True
     if zipPath != "":
         if os.path.isdir(zipPath):
+            if unzipPath == "":
+                unzipPath = os.path.join(zipPath, "解压")
             解压.unDirectory(zipPath, unzipPath)
         if scan_bool:
             if scan_info:
