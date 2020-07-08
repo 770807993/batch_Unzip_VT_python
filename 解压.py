@@ -9,11 +9,11 @@ import pathlib
 # 根据不同的类型进行解压
 def switch_Unzip(fileType, filePath, unFilePath, filePassword=None):
     # 把后缀名全部转成小写然后进行对比
-    if fileType.lower() == "zip":
+    if fileType.lower() == ".zip":
         unZip(filePath, unFilePath, filePassword.encode())
-    elif fileType.lower() == "rar":
+    elif fileType.lower() == ".rar":
         unRar(filePath, unFilePath, filePassword)
-    elif fileType.lower() == "7z":
+    elif fileType.lower() == ".7z":
         un7z(filePath, unFilePath, filePassword)
 
 
@@ -104,7 +104,7 @@ def un7z(filePath, unFilePath, filePassword=None):
 
 
 def unDirectory(zipPath, uZipPath, password="infected"):
-    filePathList = 文件操作.traversalDirectory_file(zipPath)
+    filePathList = 文件操作.getFileList(zipPath, True)
     文件操作.checkDir(uZipPath, True, True)
     for filePath in filePathList:
         print("正在解压", 文件操作.getFileName(filePath))

@@ -1,4 +1,3 @@
-import 文件操作
 import 解压
 import os
 import getopt
@@ -40,6 +39,9 @@ if __name__ == '__main__':
             if unzipPath == "":
                 unzipPath = os.path.join(zipPath, "解压")
             解压.unDirectory(zipPath, unzipPath)
+        else:
+            print("压缩包所在文件夹路径不存在")
+            exit()
         if scan_bool:
             if scan_info:
                 VT扫描.scanFiles_dir(unzipPath, True)
@@ -51,3 +53,6 @@ if __name__ == '__main__':
                 VT扫描.scanFiles_dir(scan, True)
             else:
                 VT扫描.scanFiles_dir(scan)
+        else:
+            print("扫描文件所在文件夹路径不存在")
+            exit()

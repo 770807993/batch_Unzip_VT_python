@@ -61,8 +61,7 @@ def scanFilePaths(filePaths):
 
 
 def scanFiles_dir(dirPath, scanInfo=False):
-    filesAndDirectory = 文件操作.traversalDirectory(dirPath)
-    filesPath = filesAndDirectory["fileList"]
+    filesPath = 文件操作.getFileList_all(dirPath, True)
     scanFile_result = scanFilePaths(filesPath)
     if len(scanFile_result["testAgain"]) != 0:
         for filePath in scanFile_result["testAgain"]:
