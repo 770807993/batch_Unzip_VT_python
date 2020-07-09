@@ -80,7 +80,7 @@ def unZip(filePath, unFilePath, filePassword=None):
                     with zipFileObj.open(fName, "r") as srcfile:
                         shutil.copyfileobj(srcfile, defile)
         return True
-    except zipfile.BadZipFile as e:
+    except Exception as e:
         print(文件操作.getFileName(filePath), "解压失败")
         print("错误提示：", e)
     finally:
@@ -104,8 +104,8 @@ def un7z(filePath, unFilePath, filePassword=None):
 
 
 def unDirectory(zipPath, uZipPath, password="infected"):
-    filePathList = 文件操作.getFileList(zipPath, True)
-    文件操作.checkDir(uZipPath, True, True)
+    filePathList = 文件操作.getFileList(zipPath, string=True)
+    文件操作.checkDir(uZipPath, True)
     for filePath in filePathList:
         print("正在解压", 文件操作.getFileName(filePath))
         fileType = 文件操作.getFileType(filePath)

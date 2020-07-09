@@ -61,7 +61,7 @@ def scanFilePaths(filePaths):
 
 
 def scanFiles_dir(dirPath, scanInfo=False):
-    filesPath = 文件操作.getFileList_all(dirPath, True)
+    filesPath = 文件操作.getFileList_all(dirPath, string=True)
     scanFile_result = scanFilePaths(filesPath)
     if len(scanFile_result["testAgain"]) != 0:
         for filePath in scanFile_result["testAgain"]:
@@ -89,16 +89,18 @@ def scanResultRecording(scanResult, dirPath, scanInfo=False):
     scanFile_less = []
     scanFile_ManualConfirmation = []
     for key, value in scanResult.items():
-        if "positives" in value["json_resp"]:
+        if value.get("json_resp", False):
+            json_resp = value.get("json_resp")
+            json_resp_scans = json_resp.get("scans")
             # 将写入文件的扫描的文件路径转成相对路径 方便观看
             filesPath_result = os.path.relpath(key, dirPath)
-            scanFileResultStatistical_Str = filesPath_result.ljust(60) + "引擎报毒数：" + str(value["json_resp"]["positives"])
+            scanFileResultStatistical_Str = filesPath_result.ljust(60) + "引擎报毒数：" + str(json_resp.get("positives", "获取失败"))
             scanFileResultStatisticalList.append(scanFileResultStatistical_Str)
-            if value["json_resp"]["positives"] >= 20:
+            if json_resp.get("positives", 0) >= 20:
                 scanFile_many.append(scanFileResultStatistical_Str)
             else:
                 # 报毒数少，但两个可信度很高的引擎报毒了
-                if value["json_resp"]["scans"]["Microsoft"]["detected"] or value["json_resp"]["scans"]["Kaspersky"]["detected"]:
+                if json_resp_scans.get("Microsoft", {}).get("detected", False) or json_resp_scans.get("Kaspersky", {}).get("detected", False):
                     scanFile_less.append(scanFileResultStatistical_Str)
                 else:
                     # 报毒少，高可信引擎未报毒，需要手动确认
@@ -109,10 +111,10 @@ def scanResultRecording(scanResult, dirPath, scanInfo=False):
                 scanFile_info_path = scanFile_info_path+".txt"
                 # 遍历单个文件查询结果记录其中报毒的引擎
                 scanFile_info = []
-                for scan_engine, scan_engine_info in value["json_resp"]["scans"].items():
-                    if scan_engine_info["detected"]:
+                for scan_engine, scan_engine_info in json_resp_scans.items():
+                    if scan_engine_info.get("detected", False):
                         # 记录下报毒的引擎和报毒名
-                        scanFile_info_str = "报毒引擎：" + scan_engine.ljust(30) + "病毒名：" + scan_engine_info["result"]
+                        scanFile_info_str = "报毒引擎：" + scan_engine.ljust(30) + "病毒名：" + scan_engine_info.get("result", "未知")
                         scanFile_info.append(scanFile_info_str)
                 # 创建目录结构
                 文件操作.checkDir(os.path.dirname(scanFile_info_path), True)
