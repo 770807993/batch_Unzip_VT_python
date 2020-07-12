@@ -47,7 +47,7 @@ def getDirPath(filePath):
 
 
 # 将数据写入文件
-def writeData(filePath, data, wordWrap=True):
+def writeData(filePath, data, wordWrap=True, coding="gbk"):
     p = pathlib.Path(filePath)
     if p.exists() and not p.exists():
         print("存在与写入文件名称相同的文件夹，请手动删除")
@@ -56,7 +56,7 @@ def writeData(filePath, data, wordWrap=True):
         if type(data) is list:
             if wordWrap:
                 for linData in data:
-                    f.write(linData)
+                    f.write(str(linData).encode(coding).decode())
                     f.write("\n")
             else:
                 f.writelines(data)
@@ -75,16 +75,6 @@ def getFileMD5(filePath):
         f.close()
         file_hash = hashlib.md5(f_buffer).hexdigest()
     return file_hash
-
-
-# 获取需要可以省略的文件夹层级
-def getCanOmittedPath(path):
-    p = pathlib.Path(path)
-    # 获取path下的所有子目录路路径
-    pathList = []
-    for pathList_item in p.glob("**"):
-        pathList.append(pathList_item)
-    canOmittedPath = []
 
 
 # 获取指定目录下的所有子目录和文件(递归查找)，distinguish决定返回字典还是列表，默认返回字典,string指路径为字符串还是Path对象
@@ -235,34 +225,51 @@ def getFileList(path, filePath=True, fileSuffix=True, string=False):
     return fileList
 
 
-# 获取指定路径下的各级绝对路径,迭代获取，大目录可能很慢
-def dirRating_absolutePath(path, level=0):
-    dirRat = {"level": level, "path": str(path)}
-    temDict = getDirListAndFileList(path, string=True)
-    dirRat["file"] = temDict.get("file")
-    dirList = []
-    for dirItem in temDict.get("dir"):
-        dirList.append(dirRating_absolutePath(dirItem, level + 1))
-    dirRat["dir"] = dirList
-    return dirRat
-
-
 # 获取指定路径下的各级相对路径,迭代获取，大目录可能很慢
-def dirRating_relativePath(path, level=0):
+def dirRating(path, level=0, relativePath=True):
     p = pathlib.Path(path)
     dirRat = {"level": level, "parentPath": str(p.parent),
-              "name": str(p.name), "path": str(p),
-              "file": getFileList(p, filePath=False)}
+              "name": str(p.name), "path": str(p)}
+    if relativePath:
+        dirRat["file"] = getFileList(p, filePath=False)
+    else:
+        dirRat["file"] = getFileList(p)
     subDirList = []
     for dirItem in getDirList(p):
-        subDirList.append(dirRating_relativePath(dirItem, level + 1))
+        subDirList.append(dirRating(dirItem, level + 1))
     dirRat["subDir"] = subDirList
     return dirRat
 
 
 # 更改指定路径下的所有下项的编码格式
-def modifyEncodingFormat_Path(path, encode, decode="gbk"):
-    pathList = getDirListAndFileList_all(path, False)
+def EncodingFormat_path(path, encode_str, decode_str="gbk", dirDic=None):
+    if dirDic is None:
+        dirDic = dirRating(path)
+    parentPath = pathlib.Path(path)
+    for item in dirDic.get("subDir"):
+        name = item.get("name").encode(encode_str).decode(decode_str)
+        p = pathlib.Path(item.get("path")).rename(parentPath/name)
+        EncodingFormat_path(p, encode_str, decode_str, item)
+    # 当前层级文件重编码
+    for item in dirDic.get("file"):
+        name = item.encode(encode_str).decode(decode_str)
+        pathlib.Path(parentPath/item).rename(parentPath / name)
+
+
+# 获取需要可以省略的文件夹层级
+def omittedPath(path, parentPath="", dirDic=None):
+    if dirDic is None:
+        dirDic = dirRating(path)
+    if parentPath == "":
+        parentPath = path
+    subDirNum = len(dirDic.get("subDir"))
+    fileNum = len(dirDic.get("file"))
+    if subDirNum == 1 and fileNum == 0:
+        omittedPath(path, path)
+    elif fileNum == 0:
+        return True
+
+    pass
 
 
 # 测试

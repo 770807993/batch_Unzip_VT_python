@@ -55,8 +55,6 @@ def unZip(filePath, unFilePath, filePassword=None):
     if not unPathObj.exists():
         unPathObj.mkdir()
     try:
-        # 拼接存放解压文件的文件夹路径
-        unPathObj = unPathObj/pathObj.stem
         # 如果这个文件夹不存在则创建
         if not unPathObj.exists():
             unPathObj.mkdir()
@@ -83,6 +81,8 @@ def unZip(filePath, unFilePath, filePassword=None):
     except Exception as e:
         print(文件操作.getFileName(filePath), "解压失败")
         print("错误提示：", e)
+        print("尝试使用7z解压")
+        un7z(filePath, unFilePath, filePassword)
     finally:
         zipFileObj.close()
     return False
@@ -99,7 +99,7 @@ def un7z(filePath, unFilePath, filePassword=None):
     if unState:
         return True
     else:
-        print(文件操作.getFileName(filePath), "解压失败，可能是密码错误")
+        print(文件操作.getFileName(filePath), "解压失败")
         return False
 
 
