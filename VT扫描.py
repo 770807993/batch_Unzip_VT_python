@@ -1,9 +1,11 @@
+import requests
 from virustotal_python import Virustotal
 import os.path
 import time
 import 文件操作
 
 # 初始化对象，填入API_Key
+# vtotal = Virustotal("51f9194a2d0e7d60cb7952f8bed2849a65617614e9edaa615c1e7d3ea45cb954")
 vtotal = Virustotal("5af41c462b8cb6b9b02f1641ab3ebbbe6bc289b723de142c9765beb691f704b6")
 
 
@@ -25,13 +27,24 @@ def scanFile(filePath):
     while resp["status_code"] == 204:
         print("超过请求速率", filePath, "将在60S后重试")
         time.sleep(60)
-        resp = vtotal.file_report(file_hash_list)
+        try:
+            resp = vtotal.file_report(file_hash_list)
+        except requests.exceptions as err:
+            print(err)
+            print("请求扫描失败，60s后尝试")
+            time.sleep(60)
+            resp = vtotal.file_report(file_hash_list)
         file_report_num = file_report_num + 1
         if file_report_num == 4:
             return resp
     # pprint(resp)
     if resp["json_resp"]["response_code"] == 0:
-        resp = vtotal.file_scan(filePath)
+        try:
+            resp = vtotal.file_scan(filePath)
+        except requests.exceptions as e:
+            print(e)
+            print(filePath, "上传文件失败")
+            return None
         if resp["json_resp"]["response_code"] == 0:
             print("上传失败")
             return None
@@ -53,7 +66,7 @@ def scanFilePaths(filePaths):
         elif resp["status_code"] == 204:
             print(file_path, "扫描失败")
         elif not ("positives" in resp["json_resp"]):
-            print(file_path, "排队等待重更新上传")
+            print(file_path, "已上传，排队等待扫描")
             testAgain.append(file_path)
     scanFile_result["result"] = result
     scanFile_result["testAgain"] = testAgain
@@ -63,9 +76,12 @@ def scanFilePaths(filePaths):
 def scanFiles_dir(dirPath, scanInfo=False):
     filesPath = 文件操作.getFileList_all(dirPath, string=True)
     scanFile_result = scanFilePaths(filesPath)
-    if len(scanFile_result["testAgain"]) != 0:
-        for filePath in scanFile_result["testAgain"]:
-            print(filePath, "请稍后重新查询")
+    if len(scanFile_result.get("testAgain")) != 0:
+        print("获取排队扫描结果,等待一分钟")
+        time.sleep(60)
+        scanFile_result_1 = scanFilePaths(scanFile_result.get("testAgain"))
+        for resultItem in scanFile_result_1.get("result"):
+            scanFile_result["result"].append(resultItem)
     # 将查询的返回结果写入文件
     if len(scanFile_result["result"]) != 0:
         result = scanFile_result["result"]

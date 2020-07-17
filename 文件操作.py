@@ -2,6 +2,7 @@ import os
 import json
 import pathlib
 import hashlib
+import shutil
 
 
 # 获取文件类型
@@ -52,12 +53,16 @@ def writeData(filePath, data, wordWrap=True, coding="gbk"):
     if p.exists() and not p.exists():
         print("存在与写入文件名称相同的文件夹，请手动删除")
         return
-    with open(filePath, "w") as f:
+    with open(filePath, "wb") as f:
         if type(data) is list:
             if wordWrap:
                 for linData in data:
-                    f.write(str(linData).encode(coding).decode())
-                    f.write("\n")
+                    try:
+                        f.write(str(linData).encode(coding))
+                    except UnicodeEncodeError as e:
+                        print(e)
+                        f.write(str(linData).encode())
+                    f.write("\n".encode(coding))
             else:
                 f.writelines(data)
         elif type(data) is dict:
@@ -248,27 +253,39 @@ def EncodingFormat_path(path, encode_str, decode_str="gbk", dirDic=None):
     parentPath = pathlib.Path(path)
     for item in dirDic.get("subDir"):
         name = item.get("name").encode(encode_str).decode(decode_str)
-        p = pathlib.Path(item.get("path")).rename(parentPath/name)
+        p = pathlib.Path(item.get("path")).rename(parentPath / name)
         EncodingFormat_path(p, encode_str, decode_str, item)
     # 当前层级文件重编码
     for item in dirDic.get("file"):
         name = item.encode(encode_str).decode(decode_str)
-        pathlib.Path(parentPath/item).rename(parentPath / name)
+        pathlib.Path(parentPath / item).rename(parentPath / name)
 
 
 # 获取需要可以省略的文件夹层级
 def omittedPath(path, parentPath="", dirDic=None):
     if dirDic is None:
         dirDic = dirRating(path)
+    p = pathlib.Path(path)
     if parentPath == "":
-        parentPath = path
+        parentPath = p
+    else:
+        parentPath = pathlib.Path(parentPath)
     subDirNum = len(dirDic.get("subDir"))
     fileNum = len(dirDic.get("file"))
     if subDirNum == 1 and fileNum == 0:
-        omittedPath(path, path)
-    elif fileNum == 0:
-        return True
-
+        dirItem = dirDic.get("subDir")[0]
+        omittedPath(p / dirItem.get("name"), parentPath, dirItem)
+    elif parentPath != pathlib.Path(dirDic.get("parentPath")):
+        # 防止移动过来的文件和目录中名称有与原文件夹名称重复的
+        parentDir_subDir = getDirList(parentPath)[0]
+        for item in dirDic.get("subDir"):
+            if item.get("name") == parentDir_subDir.stem:
+                item.rename(parentDir_subDir.name+"~")
+        shutil.move(str(parentPath), dirDic.get("parentPath"))
+        shutil.move(str(parentPath))
+        pass
+    for dirItem in dirDic.get("subDir"):
+        omittedPath(p / dirItem.get("name"), parentPath, dirItem)
     pass
 
 

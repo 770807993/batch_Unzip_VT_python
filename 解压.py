@@ -63,7 +63,7 @@ def unZip(filePath, unFilePath, filePassword=None):
             # 转变压缩包内文件/文件夹编码
             correct_fn = fName.encode('cp437').decode('gbk')
             # 将当前遍历路径转成路径对象
-            correct_fnObj = unPathObj/correct_fn
+            correct_fnObj = unPathObj / correct_fn
             # 如果当前遍历的路径为文件夹
             if str(correct_fn).endswith("/"):
                 # 文件夹不存在则创建
@@ -82,7 +82,7 @@ def unZip(filePath, unFilePath, filePassword=None):
         print(文件操作.getFileName(filePath), "解压失败")
         print("错误提示：", e)
         print("尝试使用7z解压")
-        un7z(filePath, unFilePath, filePassword)
+        un7z(filePath, unFilePath, filePassword.decode())
     finally:
         zipFileObj.close()
     return False
@@ -93,7 +93,8 @@ def un7z(filePath, unFilePath, filePassword=None):
     unState = False
     cmd = "7z x " + os.path.abspath(filePath) + " -y " + " -o" + os.path.abspath(unFilePath)
     if filePassword is not None:
-        cmd = "7z x " + os.path.abspath(filePath) + " -p" + filePassword + " -y " + " -o" + os.path.abspath(unFilePath)
+        cmd = "7z x " + "\"" + os.path.abspath(
+            filePath) + "\"" + " -p" + filePassword + " -y " + " -o" + "\"" + os.path.abspath(unFilePath) + "\""
     if os.system(cmd) == 0:
         unState = True
     if unState:
@@ -104,7 +105,7 @@ def un7z(filePath, unFilePath, filePassword=None):
 
 
 def unDirectory(zipPath, uZipPath, password="infected"):
-    filePathList = 文件操作.getFileList(zipPath, string=True)
+    filePathList = 文件操作.getFileList_all(zipPath, string=True)
     文件操作.checkDir(uZipPath, True)
     for filePath in filePathList:
         print("正在解压", 文件操作.getFileName(filePath))
@@ -114,9 +115,10 @@ def unDirectory(zipPath, uZipPath, password="infected"):
             fileNameStr = 文件操作.getFileName(filePath, False)
             passwordStr_index = fileNameStr.index("密码") + 2
             passwordStr = fileNameStr[passwordStr_index:]
-            if passwordStr[0:1] == ":":
+            if passwordStr[0:1] == ":" or passwordStr[0:1] == "：" or passwordStr[0:1] == "_":
                 passwordStr_index = passwordStr_index + 1
-                passwordStr = fileNameStr[passwordStr_index:]
+                if len(fileNameStr[passwordStr_index:]) !=0:
+                    passwordStr = fileNameStr[passwordStr_index:]
             switch_Unzip(fileType, filePath, uZipFilePath, passwordStr)
         except ValueError as e:
             switch_Unzip(fileType, filePath, uZipFilePath, password)
