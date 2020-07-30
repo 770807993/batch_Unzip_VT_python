@@ -77,11 +77,11 @@ def scanFiles_dir(dirPath, scanInfo=False):
     filesPath = 文件操作.getFileList_all(dirPath, string=True)
     scanFile_result = scanFilePaths(filesPath)
     if len(scanFile_result.get("testAgain")) != 0:
-        print("获取排队扫描结果,等待一分钟")
-        time.sleep(60)
+        print("获取排队扫描结果,等待三分钟")
+        time.sleep(180)
         scanFile_result_1 = scanFilePaths(scanFile_result.get("testAgain"))
-        for resultItem in scanFile_result_1.get("result"):
-            scanFile_result["result"].append(resultItem)
+        for resultItem_filePath, resultItem_resp in scanFile_result_1.get("result").items():
+            scanFile_result["result"][resultItem_filePath] = resultItem_resp
     # 将查询的返回结果写入文件
     if len(scanFile_result["result"]) != 0:
         result = scanFile_result["result"]
