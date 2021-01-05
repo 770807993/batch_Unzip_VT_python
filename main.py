@@ -38,7 +38,10 @@ if __name__ == '__main__':
         if os.path.isdir(zipPath):
             if unzipPath == "":
                 unzipPath = os.path.join(zipPath, "解压")
-            解压.unDirectory(zipPath, unzipPath)
+            if passwordStr != "":
+                解压.unDirectory(zipPath, unzipPath, passwordStr)
+            else:
+                解压.unDirectory(zipPath, unzipPath)
         else:
             print("压缩包所在文件夹路径不存在")
             exit()
