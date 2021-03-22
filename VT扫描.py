@@ -45,16 +45,18 @@ def scanFile(filePath):
     if resp["json_resp"]["response_code"] == 0:
         try:
             resp = vtotal.file_scan(filePath)
-        except requests.exceptions as e:
+        except Exception as e:
             print(e)
             print(filePath, "上传文件失败")
             return None
-        if resp["json_resp"]["response_code"] == 0:
-            print("上传失败")
-            return None
-    if "positives" in resp["json_resp"]:
-        print(filePath, resp["json_resp"]["positives"])
-    return resp
+    try:
+        if "positives" in resp["json_resp"]:
+            print(filePath, resp["json_resp"]["positives"])
+        return resp
+    except KeyError:
+        print(filePath)
+        print(resp)
+        return None
 
 
 # 批量上传文件，参数：文夹路径list，返回dict,"result"对应dict,key为文件路径，value为查询结果json，"testAgain"对应一个list,内部为需要重新上传的文件路径
