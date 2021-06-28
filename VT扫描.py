@@ -5,8 +5,8 @@ import time
 import 文件操作
 
 # 初始化对象，填入API_Key
-# vtotal = Virustotal("51f9194a2d0e7d60cb7952f8bed2849a65617614e9edaa615c1e7d3ea45cb954")
-vtotal = Virustotal("5af41c462b8cb6b9b02f1641ab3ebbbe6bc289b723de142c9765beb691f704b6")
+# vtotal = Virustotal("")
+vtotal = Virustotal("")
 
 
 # 上传文件,参数为文件路径，返回值为查询结果
